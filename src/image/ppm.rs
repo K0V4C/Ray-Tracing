@@ -48,20 +48,11 @@ impl ToFile for PPM {
         match OpenOptions::new().write(true).create(true).open(image_path) {
             
             Ok(mut open_file) => {        
-                
                 open_file.write(self.get_metadata().as_bytes())?;
-                
-                let mut timer = self.height;
-                
                 for (idx, upixel) in self.data.iter().enumerate() {
-                    
-                    PPM::log_lines_remaining(idx, self.width, &mut timer);
-                    
                     let pixel = format!("{} {} {}\n", upixel.red, upixel.green, upixel.blue);
                     open_file.write(pixel.as_bytes())?;
                 }
-                
-                
                 Ok(())
             },
             

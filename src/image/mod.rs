@@ -33,20 +33,6 @@ pub trait ToFile {
     
     fn get_metadata(&self) -> String;
     
-    fn log_lines_remaining(idx: usize, image_width: u32, remaining: &mut u32) {
-        
-        if idx / image_width as usize != 0 {
-            return;
-        }
-        
-        println!("Lines remaining: {}", remaining);
-        *remaining = remaining.saturating_sub(1);
-        
-        if *remaining == 0 {
-            println!("Done!");
-        }
-    }
-    
     fn delete_if_exits(image_path: &str) -> Result<()> {
         
         if Path::new(image_path).exists() {

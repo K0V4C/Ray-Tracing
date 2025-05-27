@@ -20,6 +20,8 @@ impl From<Vec3> for fPixel {
     }
 }
 
+pub type Color = fPixel;
+
 #[derive(Default)]
 pub struct uPixel {
     pub red: u8,
