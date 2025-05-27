@@ -16,6 +16,8 @@ impl PPM {}
 impl From<Image> for PPM {
     fn from(value: Image) -> Self {
         
+        // Image stores pixels as values from 0.0 to 1.0
+        // PPM image format requires us to use values from 0 to 255
         let converted = value.data.iter().map(|x| {
             uPixel {
                 red: (x.red * 255.0) as u8,
@@ -45,12 +47,16 @@ impl ToFile for PPM {
         
         match OpenOptions::new().write(true).create(true).open(image_path) {
             
-            Ok(mut open_file) => {
+            Ok(mut open_file) => {        
                 
-                let metadata = self.get_metadata();
-                open_file.write(metadata.as_bytes())?;
+                open_file.write(self.get_metadata().as_bytes())?;
                 
-                for upixel in &self.data {
+                let mut timer = self.height;
+                
+                for (idx, upixel) in self.data.iter().enumerate() {
+                    
+                    PPM::log_lines_remaining(idx, self.width, &mut timer);
+                    
                     let pixel = format!("{} {} {}\n", upixel.red, upixel.green, upixel.blue);
                     open_file.write(pixel.as_bytes())?;
                 }

@@ -1,6 +1,7 @@
 use image::{pixel::fPixel, ppm::PPM, Image, ToFile};
 
 mod image;
+pub mod vec3;
 
 fn main() {
     
@@ -11,8 +12,8 @@ fn main() {
         for j in 0..256 {
             
             data[i*256 + j] = fPixel {
-                red: (i as f32) / 256.0,
-                green: (j as f32) / 256.0,
+                red: (j as f32) / 256.0,
+                green: (i as f32) / 256.0,
                 blue: 0.0,
                 alpha: 0.0,
             }
