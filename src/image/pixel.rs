@@ -1,27 +1,12 @@
-use crate::vec3::Vec3;
-
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct fPixel {
-    pub red: f32,
-    pub green: f32,
-    pub blue: f32,
-    pub alpha: f32,
+    pub red: f64,
+    pub green: f64,
+    pub blue: f64,
+    pub alpha: f64,
 }
 
-impl From<Vec3> for fPixel {
-    fn from(value: Vec3) -> Self {
-        Self {
-            red: value.e[0] as f32,
-            green: value.e[1] as f32,
-            blue: value.e[2] as f32,
-            alpha: 0.0,
-        }
-    }
-}
-
-pub type Color = fPixel;
-
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct uPixel {
     pub red: u8,
     pub green: u8,

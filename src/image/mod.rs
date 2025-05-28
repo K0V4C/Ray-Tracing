@@ -3,6 +3,8 @@ use std::path::Path;
 use anyhow::{Result, anyhow};
 use pixel::fPixel;
 
+use crate::vec3::Color;
+
 pub mod pixel;
 pub mod ppm;
 
@@ -21,8 +23,15 @@ impl Image {
         }
     }
 
-    pub fn load_data(&mut self, data: Vec<fPixel>) {
-        self.data = data;
+    pub fn load_data(&mut self, data: Vec<Color>) {
+        self.data = data.iter().map(|value| {
+            fPixel {
+                red: value.e[0] as f64,
+                green: value.e[1] as f64,
+                blue: value.e[2] as f64,
+                alpha: 0.0,
+            }
+        }).collect()
     }
 }
 

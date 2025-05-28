@@ -10,6 +10,7 @@ mod camera;
 mod ray;
 pub mod utility;
 pub mod vec3;
+pub mod timer;
 
 
 fn main() {
@@ -18,6 +19,8 @@ fn main() {
     let mut camera = Camera::default();
     camera.aspect_ratio = 16.0 / 9.0;
     camera.image_width = 400;
+    camera.samples_per_pixel = 10;
+    camera.max_depth = 50;
 
     // World
     let mut world = HittableList::default();

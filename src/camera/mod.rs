@@ -1,19 +1,21 @@
 use std::f64::INFINITY;
 
-use crate::{hittable::{hittable_list::HittableList, HitRecord, Hittable}, image::{pixel::Color, ppm::PPM, Image, ToFile}, ray::Ray, utility::interval::Interval, vec3::{Point3, Vec3}};
+use crate::{hittable::{hittable_list::HittableList, HitRecord, Hittable}, image::{ppm::PPM, Image, ToFile}, ray::Ray, timer::Timer, utility::{interval::Interval, random_double}, vec3::{Color, Point3, Vec3}};
 
 pub struct Camera {
     
     // Public
     pub aspect_ratio: f64, // Image Ratio
     pub image_width: u32, // Image width
-    
+    pub samples_per_pixel: u32, // Count of random samples for each pixel
+    pub max_depth: u32, // Max number of bounces
     // Private
     image_height: u32, // Image height
     center: Point3, // Camera Center
     pixel_00_loc: Point3, // Locaiton of pixel (0,0)
     pixel_delta_u: Vec3, // Offset to pixel to the right
     pixel_delta_v: Vec3, // Offset to pixel to below
+    pixel_sample_scale: f64, // Collor sample scale for a sum of pixel samples
 }
 
 impl Default for Camera {
@@ -21,11 +23,14 @@ impl Default for Camera {
         Camera { 
             aspect_ratio: 1.0,
             image_width: 100,
+            samples_per_pixel: 10,
+            max_depth: 10,
             image_height: 0,
             center: Point3::new(0.0, 0.0, 0.0),
             pixel_00_loc: Point3::new(0.0, 0.0, 0.0),
             pixel_delta_u: Vec3::new(0.0, 0.0, 0.0),
-            pixel_delta_v: Vec3::new(0.0, 0.0, 0.0)
+            pixel_delta_v: Vec3::new(0.0, 0.0, 0.0),
+            pixel_sample_scale: 1.0,
         }
     }
 }
@@ -38,24 +43,31 @@ impl Camera {
         
         let mut new_data = vec![];
         new_data.resize_with((self.image_width * self.image_height) as usize, || Default::default());
-    
+        
+        let mut timer = Timer::new(self.image_height as usize, 1);
+        timer.wind_up();
+        
         // Render
         for j in 0..self.image_height {
+            timer.tick();
             for i in 0..self.image_width {
-                let pixel_center =
-                    self.pixel_00_loc + (i as f64 * self.pixel_delta_u) + (j as f64 * self.pixel_delta_v);
-                let ray_direction = pixel_center - self.center;
-                let r = Ray::new(self.center, ray_direction);
-    
-                // This is compromise for ray color
-    
-                new_data[(j * self.image_width + i) as usize] = Camera::ray_color(&r, &world);
+                
+                let mut pixel_color: Vec3 = Vec3::default();
+                
+                for _ in 0..self.samples_per_pixel {
+                    let r = self.get_ray(i, j);
+                    pixel_color += Self::ray_color(&r, self.max_depth, &world);
+                }
+                
+                new_data[(j * self.image_width + i) as usize] = pixel_color * self.pixel_sample_scale;
             }
         }
     
+        
+        // Save the image
         let mut new_image = Image::new(self.image_width, self.image_height);
         new_image.load_data(new_data);
-    
+        
         let ppm_new_image: PPM = new_image.into();
         ppm_new_image.save("test_2.ppm").unwrap();
         
@@ -88,20 +100,54 @@ impl Camera {
             self.center - Vec3::new(0.0, 0.0, focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
         self.pixel_00_loc = viewport_upper_left + 0.5 * (self.pixel_delta_u + self.pixel_delta_v);
         
+        self.pixel_sample_scale = 1.0 / self.samples_per_pixel as f64;
+        
         
     }
     
-    fn ray_color(r: &Ray, world: &HittableList) -> Color {
+    fn ray_color(r: &Ray, depth: u32, world: &HittableList) -> Color {
+        
+        if depth <= 0 {
+            return Color::default();
+        }
+        
         let mut rec = HitRecord::default();
     
-        if world.hit(&r, Interval::new(0.0, INFINITY), &mut rec) {
-            return (0.5 * (rec.normal + Vec3::new(1.0, 1.0, 1.0))).into();
+        if world.hit(&r, Interval::new(0.001, INFINITY), &mut rec) {
+            let direction = Vec3::random_on_hemisphere(&rec.normal);
+            
+            // This recursive call is so cool
+            return 0.5 * Self::ray_color(&Ray::new(rec.p, direction), depth - 1, &world);
         }
     
         let unit_direction = Vec3::unit_vector(r.direction());
         let a = 0.5 * (unit_direction.y() + 1.0);
         let c = (1.0 - a) * Vec3::new(1.0, 1.0, 1.0) + a * Vec3::new(0.5, 0.7, 1.0);
         c.into()
+    }
+    
+    fn get_ray(&self, i: u32, j: u32) -> Ray {
+        // Construct a camera ray originating from the origin and directed at randomly sampled
+        // point around the pixel location i, j.
+        
+        let offset = Self::sample_square();
+        
+        // Fires a ray somewhere around (i,j) coordinate
+        let pixel_sample = self.pixel_00_loc 
+            + ((i as f64 + offset.x()) * self.pixel_delta_u)
+            + ((j as f64 + offset.y()) * self.pixel_delta_v);
+        
+        // Create Ray
+        let ray_origin = self.center;
+        let ray_direction = pixel_sample - ray_origin;
+        Ray::new(ray_origin, ray_direction)
+    }
+    
+    fn sample_square() -> Vec3 {
+        Vec3::new(
+            random_double() - 0.5,
+           random_double() - 0.5,
+           0.0)
     }
     
 }

@@ -1,9 +1,11 @@
 use std::{
     fs::OpenOptions,
-    io::{Seek, Write},
+    io::Write,
 };
 
 use anyhow::{Result, anyhow};
+
+use crate::utility::interval::Interval;
 
 use super::{Image, ToFile, pixel::uPixel};
 
@@ -15,6 +17,8 @@ pub struct PPM {
 
 impl PPM {}
 
+const INTENSITY: Interval = Interval {min: 0.000, max: 0.999};
+
 impl From<Image> for PPM {
     fn from(value: Image) -> Self {
         // Image stores pixels as values from 0.0 to 1.0
@@ -22,11 +26,13 @@ impl From<Image> for PPM {
         let converted = value
             .data
             .iter()
-            .map(|x| uPixel {
-                red: (x.red * 255.0) as u8,
-                green: (x.green * 255.0) as u8,
-                blue: (x.blue * 255.0) as u8,
-                alpha: (x.alpha * 255.0) as u8,
+            .map(|x| {
+                uPixel {
+                    red: (256.0 * INTENSITY.clamp(x.red)) as u8,
+                    green: (256.0 * INTENSITY.clamp(x.green)) as u8,
+                    blue: (256.0 * INTENSITY.clamp(x.blue)) as u8,
+                    alpha: (256.0 * INTENSITY.clamp(x.alpha)) as u8,
+                }
             })
             .collect();
 
@@ -49,7 +55,7 @@ impl ToFile for PPM {
         match OpenOptions::new().write(true).create(true).open(image_path) {
             Ok(mut open_file) => {
                 open_file.write(self.get_metadata().as_bytes())?;
-                for (idx, upixel) in self.data.iter().enumerate() {
+                for (_idx, upixel) in self.data.iter().enumerate() {
                     let pixel = format!("{} {} {}\n", upixel.red, upixel.green, upixel.blue);
                     open_file.write(pixel.as_bytes())?;
                 }
