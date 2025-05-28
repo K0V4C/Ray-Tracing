@@ -115,12 +115,14 @@ impl Camera {
     
         if world.hit(&r, Interval::new(0.001, INFINITY), &mut rec) {
             
-            // Lambertian distribution
-            // Still don't understand why we use random_unit_vector and not random_on_hemisphere
-            let direction = rec.normal + Vec3::random_unit_vector();
+            let mut scattered = Ray::default();
+            let mut attenuation = Color::default();
+            let material = rec.mat.as_ref().unwrap();
             
-            // This recursive call is so cool
-            return 0.5 * Self::ray_color(&Ray::new(rec.p, direction), depth - 1, &world);
+            if material.scatter(&r, &rec, &mut attenuation, &mut scattered) {
+                return attenuation * Camera::ray_color(&mut scattered, depth - 1, &world);
+            }
+            return Color::default();
         }
     
         let unit_direction = Vec3::unit_vector(r.direction());

@@ -1,3 +1,8 @@
+use std::rc::Rc;
+
+use material::Material;
+use sphere::Sphere;
+
 use crate::{
     ray::Ray, utility::interval::Interval, vec3::{Point3, Vec3}
 };
@@ -5,10 +10,13 @@ use crate::{
 pub mod hittable_list;
 pub mod sphere;
 
-#[derive(Default, Clone, Copy)]
+pub mod material;
+
+#[derive(Default, Clone)]
 pub struct HitRecord {
     pub p: Point3,
     pub normal: Vec3,
+    pub mat: Option<Rc<dyn Material>>,
     pub t: f64,
     pub front_face: bool,
 }
@@ -32,3 +40,4 @@ impl HitRecord {
 pub trait Hittable {
     fn hit(&self, r: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool;
 }
+

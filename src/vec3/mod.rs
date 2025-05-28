@@ -56,6 +56,15 @@ impl Vec3 {
     pub fn unit_vector(v: &Vec3) -> Vec3 {
         *v / v.length()
     }
+   
+    pub fn near_zero(&self) -> bool {
+        
+        let s = 1e-8;
+        
+        (f64::abs(self.e[0]) < s) && 
+        (f64::abs(self.e[1]) < s) && 
+        (f64::abs(self.e[2]) < s)
+    }
     
     pub fn random_unit_vector() -> Vec3 {
         loop {
@@ -79,6 +88,10 @@ impl Vec3 {
         } else {
             -on_unit_hemisphere
         }
+    }
+    
+    pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
+        *v - 2.0 * Self::dot(&v, n) * *n
     }
     
     pub fn random() -> Vec3 {
