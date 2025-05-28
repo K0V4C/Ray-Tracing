@@ -69,7 +69,7 @@ impl Camera {
         new_image.load_data(new_data);
         
         let ppm_new_image: PPM = new_image.into();
-        ppm_new_image.save("test_2.ppm").unwrap();
+        ppm_new_image.save("test_22.ppm").unwrap();
         
     }
     
@@ -114,7 +114,10 @@ impl Camera {
         let mut rec = HitRecord::default();
     
         if world.hit(&r, Interval::new(0.001, INFINITY), &mut rec) {
-            let direction = Vec3::random_on_hemisphere(&rec.normal);
+            
+            // Lambertian distribution
+            // Still don't understand why we use random_unit_vector and not random_on_hemisphere
+            let direction = rec.normal + Vec3::random_unit_vector();
             
             // This recursive call is so cool
             return 0.5 * Self::ray_color(&Ray::new(rec.p, direction), depth - 1, &world);
