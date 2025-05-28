@@ -1,33 +1,38 @@
-use std::{fmt::Display, ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub, SubAssign}};
-
+use std::{
+    fmt::Display,
+    ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub, SubAssign},
+};
 
 #[derive(Default, Clone, Copy)]
 pub struct Vec3 {
-    pub e: [f64; 3]
+    pub e: [f64; 3],
 }
 
 // Just an alias
 pub type Point3 = Vec3;
 
 impl Vec3 {
-
     pub fn new(e0: f64, e1: f64, e2: f64) -> Self {
-        Self { e:  [e0, e1, e2]}
+        Self { e: [e0, e1, e2] }
     }
 
     // Getters
-    pub fn x(&self) -> f64 {self.e[0]}
-    pub fn y(&self) -> f64 {self.e[1]}
-    pub fn z(&self) -> f64 {self.e[2]}
+    pub fn x(&self) -> f64 {
+        self.e[0]
+    }
+    pub fn y(&self) -> f64 {
+        self.e[1]
+    }
+    pub fn z(&self) -> f64 {
+        self.e[2]
+    }
 
     pub fn length(&self) -> f64 {
-       self.length_squared().powf(0.5)
+        self.length_squared().powf(0.5)
     }
 
     pub fn length_squared(&self) -> f64 {
-        self.e[0] * self.e[0]
-        + self.e[1] * self.e[1]
-        + self.e[2] * self.e[2]
+        self.e[0] * self.e[0] + self.e[1] * self.e[1] + self.e[2] * self.e[2]
     }
 
     pub fn dot(u: &Vec3, v: &Vec3) -> f64 {
@@ -35,19 +40,18 @@ impl Vec3 {
     }
 
     pub fn cross(u: &Vec3, v: &Vec3) -> Vec3 {
-
         Vec3 {
             e: [
                 u.e[1] * v.e[2] - u.e[2] * v.e[1],
                 u.e[2] * v.e[0] - u.e[0] * v.e[2],
-                u.e[0] * v.e[1] - u.e[1] * v.e[0]
-            ]
+                u.e[0] * v.e[1] - u.e[1] * v.e[0],
+            ],
         }
     }
 
     // This uses copy trait
     pub fn unit_vector(v: &Vec3) -> Vec3 {
-         *v / v.length()
+        *v / v.length()
     }
 }
 
@@ -56,12 +60,9 @@ impl Neg for Vec3 {
     type Output = Vec3;
 
     fn neg(self) -> Self::Output {
-
         let negated = [-self.e[0], -self.e[1], -self.e[2]];
 
-        Self {
-            e: negated
-        }
+        Self { e: negated }
     }
 }
 
@@ -115,32 +116,26 @@ impl Display for Vec3 {
 impl Add for Vec3 {
     type Output = Vec3;
     fn add(self, rhs: Self) -> Self::Output {
-
         let res = [
             self.e[0] + rhs.e[0],
             self.e[1] + rhs.e[1],
-            self.e[2] + rhs.e[2]
+            self.e[2] + rhs.e[2],
         ];
 
-        Self {
-            e: res
-        }
+        Self { e: res }
     }
 }
 
 impl Sub for Vec3 {
     type Output = Vec3;
     fn sub(self, rhs: Self) -> Self::Output {
-
         let res = [
             self.e[0] - rhs.e[0],
             self.e[1] - rhs.e[1],
-            self.e[2] - rhs.e[2]
+            self.e[2] - rhs.e[2],
         ];
 
-        Self {
-            e: res
-        }
+        Self { e: res }
     }
 }
 
@@ -148,34 +143,23 @@ impl Mul<Self> for Vec3 {
     type Output = Vec3;
 
     fn mul(self, rhs: Self) -> Self::Output {
-
         let res = [
             self.e[0] * rhs.e[0],
             self.e[1] * rhs.e[1],
-            self.e[2] * rhs.e[2]
+            self.e[2] * rhs.e[2],
         ];
 
-        Self {
-            e: res
-        }
+        Self { e: res }
     }
 }
-
 
 impl Mul<f64> for Vec3 {
     type Output = Vec3;
 
     fn mul(self, rhs: f64) -> Self::Output {
+        let res = [self.e[0] * rhs, self.e[1] * rhs, self.e[2] * rhs];
 
-        let res = [
-            self.e[0] * rhs,
-            self.e[1] * rhs,
-            self.e[2] * rhs
-        ];
-
-        Self {
-            e: res
-        }
+        Self { e: res }
     }
 }
 
@@ -189,6 +173,6 @@ impl Mul<Vec3> for f64 {
 impl Div<f64> for Vec3 {
     type Output = Vec3;
     fn div(self, rhs: f64) -> Self::Output {
-        (1.0/rhs) * self
+        (1.0 / rhs) * self
     }
 }

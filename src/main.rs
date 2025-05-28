@@ -1,15 +1,21 @@
-use image::{pixel::{fPixel, Color}, ppm::PPM, Image, ToFile};
+use std::{f64::INFINITY, rc::Rc};
+
+use hittable::{HitRecord, Hittable, hittable_list::HittableList, sphere::Sphere};
+use image::{Image, ToFile, pixel::Color, ppm::PPM};
 use ray::Ray;
 use vec3::{Point3, Vec3};
 
+mod hittable;
 mod image;
 mod ray;
+pub mod utility;
 pub mod vec3;
 
-fn ray_color(r: &Ray) -> Color {
+fn ray_color(r: &Ray, world: &HittableList) -> Color {
+    let mut rec = HitRecord::default();
 
-    if hit_sphere(&Point3::new(0.0, 0.0, -1.0), 0.5, r) {
-         return Vec3::new(1.0, 0.0, 0.0).into();
+    if world.hit(&r, 0.0, INFINITY, &mut rec) {
+        return (0.5 * (rec.normal + Vec3::new(1.0, 1.0, 1.0))).into();
     }
 
     let unit_direction = Vec3::unit_vector(r.direction());
@@ -18,19 +24,7 @@ fn ray_color(r: &Ray) -> Color {
     c.into()
 }
 
-fn hit_sphere(center: &Point3, radius: f64, r: &Ray) -> bool {
-    let oc = *center - *r.origin();
-    let a = Vec3::dot(r.direction(), r.direction());
-    let b = -2.0 * Vec3::dot(r.direction(), &oc);
-    let c = Vec3::dot(&oc, &oc) - radius * radius;
-
-    let discriminant = b*b - 4.0 * a * c;
-
-    discriminant >= 0.0
-}
-
 fn main() {
-
     // Aspect Ratio
 
     let aspect_ratio: f64 = 16.0 / 9.0;
@@ -38,11 +32,12 @@ fn main() {
 
     // Calculate Image height and ensure its at least one
     let image_height = (image_width as f64 / aspect_ratio) as u32;
-    let image_height = if image_height < 1 {
-        1
-    } else {
-        image_height
-    };
+    let image_height = if image_height < 1 { 1 } else { image_height };
+
+    // World
+    let mut world = HittableList::default();
+    world.add(Rc::new(Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5)));
+    world.add(Rc::new(Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0)));
 
     // Camera
     // Viewport widths less then one are ok since they are real valued
@@ -60,7 +55,8 @@ fn main() {
     let pixel_delta_v = viewport_v / image_height as f64;
 
     // Calculate location of upper left pixel
-    let viewport_upper_left = camera_center - Vec3::new(0.0, 0.0, focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
+    let viewport_upper_left =
+        camera_center - Vec3::new(0.0, 0.0, focal_length) - viewport_u / 2.0 - viewport_v / 2.0;
     let pixel_00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v);
 
     let mut new_data = vec![];
@@ -69,14 +65,14 @@ fn main() {
     // Render
     for j in 0..image_height {
         for i in 0..image_width {
-
-            let pixel_center = pixel_00_loc + (i as f64 * pixel_delta_u) + (j as f64 * pixel_delta_v);
+            let pixel_center =
+                pixel_00_loc + (i as f64 * pixel_delta_u) + (j as f64 * pixel_delta_v);
             let ray_direction = pixel_center - camera_center;
             let r = Ray::new(camera_center, ray_direction);
 
             // This is compromise for ray color
 
-            new_data[(j * image_width + i) as usize] = ray_color(&r);
+            new_data[(j * image_width + i) as usize] = ray_color(&r, &world);
         }
     }
 
@@ -85,8 +81,4 @@ fn main() {
 
     let ppm_new_image: PPM = new_image.into();
     ppm_new_image.save("test_2.ppm").unwrap();
-
-
-
-
 }

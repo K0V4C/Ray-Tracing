@@ -1,12 +1,11 @@
 use crate::vec3::Vec3;
 
-
 #[derive(Default)]
 pub struct fPixel {
     pub red: f32,
     pub green: f32,
     pub blue: f32,
-    pub alpha: f32
+    pub alpha: f32,
 }
 
 impl From<Vec3> for fPixel {
@@ -27,7 +26,5 @@ pub struct uPixel {
     pub red: u8,
     pub green: u8,
     pub blue: u8,
-    pub alpha: u8
+    pub alpha: u8,
 }
-
-
