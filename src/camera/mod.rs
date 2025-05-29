@@ -113,6 +113,7 @@ impl Camera {
         
         let mut rec = HitRecord::default();
     
+        // Go through all object and check if they are hit
         if world.hit(&r, Interval::new(0.001, INFINITY), &mut rec) {
             
             let mut scattered = Ray::default();
@@ -124,7 +125,8 @@ impl Camera {
             }
             return Color::default();
         }
-    
+        
+        // If ray missed all of the geometry it "will hit the sky" and the color that it should be is this one
         let unit_direction = Vec3::unit_vector(r.direction());
         let a = 0.5 * (unit_direction.y() + 1.0);
         let c = (1.0 - a) * Vec3::new(1.0, 1.0, 1.0) + a * Vec3::new(0.5, 0.7, 1.0);

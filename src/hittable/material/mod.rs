@@ -1,6 +1,7 @@
 use crate::{ray::Ray, vec3::Color};
 
 pub mod metal;
+pub mod dielectric;
 pub mod lambertian;
 
 use super::HitRecord;
