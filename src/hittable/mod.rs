@@ -4,7 +4,9 @@ use material::Material;
 use sphere::Sphere;
 
 use crate::{
-    ray::Ray, utility::interval::Interval, vec3::{Point3, Vec3}
+    ray::Ray,
+    utility::interval::Interval,
+    vec3::{Point3, Vec3},
 };
 
 pub mod hittable_list;
@@ -40,4 +42,3 @@ impl HitRecord {
 pub trait Hittable {
     fn hit(&self, r: &Ray, ray_t: Interval, rec: &mut HitRecord) -> bool;
 }
-

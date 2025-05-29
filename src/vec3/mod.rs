@@ -1,9 +1,12 @@
 use std::{
     fmt::Display,
-    ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub, },
+    ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub},
 };
 
-use crate::{camera, utility::{random_double, random_double_clamp}};
+use crate::{
+    camera,
+    utility::{random_double, random_double_clamp},
+};
 
 #[derive(Default, Clone, Copy, Debug)]
 pub struct Vec3 {
@@ -56,21 +59,27 @@ impl Vec3 {
     pub fn unit_vector(v: &Vec3) -> Vec3 {
         *v / v.length()
     }
-   
-    pub fn near_zero(&self) -> bool {
-        
-        let s = 1e-8;
-        
-        (f64::abs(self.e[0]) < s) && 
-        (f64::abs(self.e[1]) < s) && 
-        (f64::abs(self.e[2]) < s)
-    }
     
+    pub fn random_in_unit_disc() -> Vec3 {
+        loop {
+            let p = Vec3::new(random_double_clamp(-1.0, 1.0), random_double_clamp(-1.0, 1.0), 0.0);
+            if p.length_squared() < 1.0 {
+                return p;
+            }
+        }
+    }
+
+    pub fn near_zero(&self) -> bool {
+        let s = 1e-8;
+
+        (f64::abs(self.e[0]) < s) && (f64::abs(self.e[1]) < s) && (f64::abs(self.e[2]) < s)
+    }
+
     pub fn random_unit_vector() -> Vec3 {
         loop {
             let p = Vec3::random_clamp(-1.0, 1.0);
             let lensq = p.length_squared();
-            
+
             // First comparison is used because we are dealing with f64, we have finite precision
             // If number generated is too small length will be 0, and we will get +- inf for normalised value
             if 1e-160 < lensq && lensq <= 1.0 {
@@ -78,10 +87,10 @@ impl Vec3 {
             }
         }
     }
-    
+
     pub fn random_on_hemisphere(normal: &Vec3) -> Vec3 {
         let on_unit_hemisphere = Vec3::random_unit_vector();
-        
+
         // If positive that means out vector has "same" direction as normal vector
         if Vec3::dot(&on_unit_hemisphere, &normal) > 0.0 {
             on_unit_hemisphere
@@ -89,31 +98,27 @@ impl Vec3 {
             -on_unit_hemisphere
         }
     }
-    
+
     pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
         *v - 2.0 * Self::dot(&v, n) * *n
     }
-    
+
     pub fn refract(uv: &Vec3, n: &Vec3, etai_over_etat: f64) -> Vec3 {
         let cos_theta = f64::min(Vec3::dot(&-(*uv), &n), 1.0);
         let r_out_perp = etai_over_etat * (uv.clone() + cos_theta * *n);
-        let r_out_parallel = - ((1.0 -  r_out_perp.length_squared()).abs().sqrt()) * *n;
+        let r_out_parallel = -((1.0 - r_out_perp.length_squared()).abs().sqrt()) * *n;
         r_out_perp + r_out_parallel
     }
-    
+
     pub fn random() -> Vec3 {
-        Vec3::new(
-            random_double(), 
-            random_double(), 
-            random_double()
-        )
+        Vec3::new(random_double(), random_double(), random_double())
     }
-    
+
     pub fn random_clamp(min: f64, max: f64) -> Vec3 {
         Vec3::new(
             random_double_clamp(min, max),
             random_double_clamp(min, max),
-            random_double_clamp(min, max)
+            random_double_clamp(min, max),
         )
     }
 }

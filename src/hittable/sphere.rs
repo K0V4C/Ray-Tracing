@@ -1,8 +1,11 @@
 use std::rc::Rc;
 
-use crate::{utility::interval::Interval, vec3::{Point3, Vec3}};
+use crate::{
+    utility::interval::Interval,
+    vec3::{Point3, Vec3},
+};
 
-use super::{material::Material, HitRecord, Hittable};
+use super::{HitRecord, Hittable, material::Material};
 
 #[derive(Default, Clone)]
 pub struct Sphere {
@@ -16,7 +19,7 @@ impl Sphere {
         Self {
             center,
             radius: f64::max(radius, 0.0),
-            mat: Some(mat)
+            mat: Some(mat),
         }
     }
 }
@@ -39,7 +42,7 @@ impl Hittable for Sphere {
         let mut root = (h - sqrtd) / a;
         if !ray_t.surrounds(root) {
             root = (h + sqrtd) / a;
-            if !ray_t.surrounds(root){
+            if !ray_t.surrounds(root) {
                 return false;
             }
         }

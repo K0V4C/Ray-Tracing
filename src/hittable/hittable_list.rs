@@ -27,12 +27,7 @@ impl HittableList {
 }
 
 impl Hittable for HittableList {
-    fn hit(
-        &self,
-        r: &crate::ray::Ray,
-        ray_t: Interval,
-        rec: &mut super::HitRecord,
-    ) -> bool {
+    fn hit(&self, r: &crate::ray::Ray, ray_t: Interval, rec: &mut super::HitRecord) -> bool {
         let mut temp_rec: HitRecord = HitRecord::default();
         let mut hit_anything = false;
         let mut closest_so_far = ray_t.max;
@@ -41,7 +36,7 @@ impl Hittable for HittableList {
             if object.hit(&r, Interval::new(ray_t.min, closest_so_far), &mut temp_rec) {
                 hit_anything = true;
                 closest_so_far = temp_rec.t;
-                
+
                 // Because HitRecord is not a Copy type we have to do this
                 *rec = temp_rec.clone();
             }

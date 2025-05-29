@@ -24,14 +24,15 @@ impl Image {
     }
 
     pub fn load_data(&mut self, data: Vec<Color>) {
-        self.data = data.iter().map(|value| {
-            fPixel {
+        self.data = data
+            .iter()
+            .map(|value| fPixel {
                 red: value.e[0] as f64,
                 green: value.e[1] as f64,
                 blue: value.e[2] as f64,
                 alpha: 0.0,
-            }
-        }).collect()
+            })
+            .collect()
     }
 }
 
