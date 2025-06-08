@@ -1,36 +1,33 @@
 use crate::{
+    hittable::{Material, Scattering},
     ray::Ray,
-    vec3::{Color, Vec3},
+    vec3::Vec3,
 };
 
-use super::Material;
-
+#[derive(Clone, Copy)]
 pub struct Lambertian {
-    albedo: Color,
+    albedo: Vec3,
 }
 
 impl Lambertian {
-    pub fn new(color: Color) -> Self {
-        Self { albedo: color }
+    pub fn new(albedo: Vec3) -> Self {
+        Self { albedo }
     }
 }
 
 impl Material for Lambertian {
-    fn scatter(
-        &self,
-        r_in: &crate::ray::Ray,
-        rec: &crate::hittable::HitRecord,
-        attenuation: &mut Color,
-        scattered: &mut crate::ray::Ray,
-    ) -> bool {
-        let mut scatter_direction = rec.normal + Vec3::random_unit_vector();
+    fn scatter(&self, r_in: &Ray, t: f64, normal: Vec3, _: bool) -> Option<Scattering> {
+        let mut scatter_direction = normal + Vec3::random_unit_vector();
 
         if scatter_direction.near_zero() {
-            scatter_direction = rec.normal;
+            scatter_direction = normal;
         }
 
-        *scattered = Ray::new(rec.p, scatter_direction);
-        *attenuation = self.albedo;
-        return true;
+        let scattered = Ray::new(r_in.at(t), scatter_direction);
+        let attenuation = self.albedo;
+        Some(Scattering {
+            attenuation,
+            scattered,
+        })
     }
 }

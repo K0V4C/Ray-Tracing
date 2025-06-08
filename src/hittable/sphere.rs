@@ -1,31 +1,31 @@
-use std::rc::Rc;
+use std::ops::Range;
 
 use crate::{
-    utility::interval::Interval,
-    vec3::{Point3, Vec3},
+    hittable::{HitRecord, Hittable, material::Material},
+    point3::Point3,
+    ray::Ray,
+    vec3::Vec3,
 };
 
-use super::{HitRecord, Hittable, material::Material};
-
 #[derive(Default, Clone)]
-pub struct Sphere {
+pub struct Sphere<M> {
     center: Point3,
     radius: f64,
-    mat: Option<Rc<dyn Material>>,
+    mat: M,
 }
 
-impl Sphere {
-    pub fn new(center: Point3, radius: f64, mat: Rc<dyn Material>) -> Self {
+impl<M> Sphere<M> {
+    pub fn new(center: Point3, radius: f64, mat: M) -> Self {
         Self {
             center,
             radius: f64::max(radius, 0.0),
-            mat: Some(mat),
+            mat,
         }
     }
 }
 
-impl Hittable for Sphere {
-    fn hit(&self, r: &crate::ray::Ray, ray_t: Interval, rec: &mut HitRecord) -> bool {
+impl<M: Material + Clone + 'static> Hittable for Sphere<M> {
+    fn hit(&self, r: &Ray, ray_t: Range<f64>) -> Option<HitRecord> {
         let oc = self.center - *r.origin();
         let a = r.direction().length_squared();
         let h = Vec3::dot(r.direction(), &oc);
@@ -33,27 +33,21 @@ impl Hittable for Sphere {
 
         let discriminant = h * h - a * c;
         if discriminant < 0.0 {
-            return false;
+            return None;
         }
 
         let sqrtd = discriminant.powf(0.5);
 
         // Find the nearest root that lies in the acceptable range
         let mut root = (h - sqrtd) / a;
-        if !ray_t.surrounds(root) {
+        if !ray_t.contains(&root) {
             root = (h + sqrtd) / a;
-            if !ray_t.surrounds(root) {
-                return false;
+            if !ray_t.contains(&root) {
+                return None;
             }
         }
 
-        // Update hit record
-        rec.t = root;
-        rec.p = r.at(rec.t);
-        let outward_normal = (rec.p - self.center) / self.radius;
-        rec.set_face_normal(&r, &outward_normal);
-        rec.mat = self.mat.clone();
-
-        return true;
+        let outward_normal = (r.at(root) - self.center) / self.radius;
+        Some(HitRecord::new(r, root, self.mat.clone(), outward_normal))
     }
 }
