@@ -1,47 +1,39 @@
-use std::rc::Rc;
+use std::ops::Range;
 
-use crate::utility::interval::Interval;
-
-use super::{HitRecord, Hittable};
+use crate::hittable::{HitRecord, Hittable};
+use crate::ray::Ray;
 
 #[derive(Default)]
 pub struct HittableList {
-    pub objects: Vec<Rc<dyn Hittable>>,
+    pub objects: Vec<Box<dyn Hittable>>,
 }
 
 impl HittableList {
-    pub fn new(object: Rc<dyn Hittable>) -> Self {
-        let mut n = vec![];
-        n.push(object);
-
-        Self { objects: n }
+    pub fn new() -> Self {
+        Self { objects: vec![] }
     }
 
     pub fn clear(&mut self) {
         self.objects.clear();
     }
 
-    pub fn add(&mut self, object: Rc<dyn Hittable>) {
-        self.objects.push(object);
+    pub fn add<H: Hittable + 'static>(&mut self, object: H) {
+        self.objects.push(Box::new(object));
     }
 }
 
 impl Hittable for HittableList {
-    fn hit(&self, r: &crate::ray::Ray, ray_t: Interval, rec: &mut super::HitRecord) -> bool {
-        let mut temp_rec: HitRecord = HitRecord::default();
-        let mut hit_anything = false;
-        let mut closest_so_far = ray_t.max;
+    fn hit(&self, r: &Ray, ray_t: Range<f64>) -> Option<HitRecord> {
+        let mut ret = None;
+        let mut closest_so_far = ray_t.end;
 
         for object in &self.objects {
-            if object.hit(&r, Interval::new(ray_t.min, closest_so_far), &mut temp_rec) {
-                hit_anything = true;
+            if let Some(temp_rec) = object.hit(r, ray_t.start..closest_so_far) {
                 closest_so_far = temp_rec.t;
-
-                // Because HitRecord is not a Copy type we have to do this
-                *rec = temp_rec.clone();
+                ret = Some(temp_rec);
             }
         }
 
-        return hit_anything;
+        ret
     }
 }

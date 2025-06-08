@@ -3,19 +3,12 @@ use std::{
     ops::{Add, AddAssign, Div, DivAssign, Index, IndexMut, Mul, MulAssign, Neg, Sub},
 };
 
-use crate::{
-    camera,
-    utility::{random_double, random_double_clamp},
-};
+use rand::Rng as _;
 
 #[derive(Default, Clone, Copy, Debug)]
 pub struct Vec3 {
     pub e: [f64; 3],
 }
-
-// Just an alias
-pub type Point3 = Vec3;
-pub type Color = Vec3;
 
 impl Vec3 {
     pub fn new(e0: f64, e1: f64, e2: f64) -> Self {
@@ -56,13 +49,17 @@ impl Vec3 {
     }
 
     // This uses copy trait
-    pub fn unit_vector(v: &Vec3) -> Vec3 {
-        *v / v.length()
+    pub fn unit_vector(&self) -> Vec3 {
+        *self / self.length()
     }
-    
+
     pub fn random_in_unit_disc() -> Vec3 {
         loop {
-            let p = Vec3::new(random_double_clamp(-1.0, 1.0), random_double_clamp(-1.0, 1.0), 0.0);
+            let p = Vec3::new(
+                rand::rng().random_range(-1.0..1.0),
+                rand::rng().random_range(-1.0..1.0),
+                0.0,
+            );
             if p.length_squared() < 1.0 {
                 return p;
             }
@@ -70,9 +67,9 @@ impl Vec3 {
     }
 
     pub fn near_zero(&self) -> bool {
-        let s = 1e-8;
+        const S: f64 = 1e-8;
 
-        (f64::abs(self.e[0]) < s) && (f64::abs(self.e[1]) < s) && (f64::abs(self.e[2]) < s)
+        self.e.iter().all(|e| e.abs() < S)
     }
 
     pub fn random_unit_vector() -> Vec3 {
@@ -92,7 +89,7 @@ impl Vec3 {
         let on_unit_hemisphere = Vec3::random_unit_vector();
 
         // If positive that means out vector has "same" direction as normal vector
-        if Vec3::dot(&on_unit_hemisphere, &normal) > 0.0 {
+        if Vec3::dot(&on_unit_hemisphere, normal) > 0.0 {
             on_unit_hemisphere
         } else {
             -on_unit_hemisphere
@@ -100,25 +97,29 @@ impl Vec3 {
     }
 
     pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
-        *v - 2.0 * Self::dot(&v, n) * *n
+        *v - 2.0 * Self::dot(v, n) * *n
     }
 
     pub fn refract(uv: &Vec3, n: &Vec3, etai_over_etat: f64) -> Vec3 {
-        let cos_theta = f64::min(Vec3::dot(&-(*uv), &n), 1.0);
-        let r_out_perp = etai_over_etat * (uv.clone() + cos_theta * *n);
+        let cos_theta = f64::min(Vec3::dot(&-(*uv), n), 1.0);
+        let r_out_perp = etai_over_etat * (*uv + cos_theta * *n);
         let r_out_parallel = -((1.0 - r_out_perp.length_squared()).abs().sqrt()) * *n;
         r_out_perp + r_out_parallel
     }
 
     pub fn random() -> Vec3 {
-        Vec3::new(random_double(), random_double(), random_double())
+        Vec3::new(
+            rand::rng().random(),
+            rand::rng().random(),
+            rand::rng().random(),
+        )
     }
 
     pub fn random_clamp(min: f64, max: f64) -> Vec3 {
         Vec3::new(
-            random_double_clamp(min, max),
-            random_double_clamp(min, max),
-            random_double_clamp(min, max),
+            rand::rng().random_range(min..max),
+            rand::rng().random_range(min..max),
+            rand::rng().random_range(min..max),
         )
     }
 }
@@ -152,25 +153,19 @@ impl IndexMut<usize> for Vec3 {
 
 impl AddAssign for Vec3 {
     fn add_assign(&mut self, rhs: Self) {
-        self.e[0] += rhs.e[0];
-        self.e[1] += rhs.e[1];
-        self.e[2] += rhs.e[2];
+        self.e.iter_mut().zip(rhs.e).for_each(|(a, b)| *a += b);
     }
 }
 
 impl MulAssign for Vec3 {
     fn mul_assign(&mut self, rhs: Self) {
-        self.e[0] *= rhs.e[0];
-        self.e[1] *= rhs.e[1];
-        self.e[2] *= rhs.e[2];
+        self.e.iter_mut().zip(rhs.e).for_each(|(a, b)| *a *= b);
     }
 }
 
 impl DivAssign for Vec3 {
     fn div_assign(&mut self, rhs: Self) {
-        self.e[0] /= rhs.e[0];
-        self.e[1] /= rhs.e[1];
-        self.e[2] /= rhs.e[2];
+        self.e.iter_mut().zip(rhs.e).for_each(|(a, b)| *a /= b);
     }
 }
 
@@ -224,10 +219,9 @@ impl Mul<Self> for Vec3 {
 impl Mul<f64> for Vec3 {
     type Output = Vec3;
 
-    fn mul(self, rhs: f64) -> Self::Output {
-        let res = [self.e[0] * rhs, self.e[1] * rhs, self.e[2] * rhs];
-
-        Self { e: res }
+    fn mul(mut self, rhs: f64) -> Self::Output {
+        self.e.iter_mut().for_each(|e| *e *= rhs);
+        self
     }
 }
 

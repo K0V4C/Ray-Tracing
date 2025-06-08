@@ -1,12 +1,12 @@
 [package]
-name = "Ray-Tracing"
+name = "ray-tracing"
 version = "0.1.0"
 edition = "2024"
 
 [profile.release]
 opt-level = 3
 lto = true
-strip = true # remove debug symbols
+strip = true  # remove debug symbols
 
 [dependencies]
 anyhow = "1.0.98"
